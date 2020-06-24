@@ -154,14 +154,13 @@ class VideorecorderTest extends \PHPUnit_Framework_TestCase
         $cassette
             ->expects($this->once())
             ->method('playback')
-            ->with($request)
             ->will($this->returnValue(null));
 
         if (VCR::MODE_NEW_EPISODES === $mode || VCR::MODE_ONCE === $mode && $isNew === true) {
             $cassette
                 ->expects($this->once())
                 ->method('record')
-                ->with($request, $response);
+                ->with($response);
         }
 
         if ($mode == 'once') {
