@@ -71,34 +71,6 @@ class Configuration
     );
 
     /**
-     * A value of null means all RequestMatchers are enabled.
-     *
-     * @var array Names of the RequestMatchers which are enabled.
-     */
-    private $enabledRequestMatchers;
-
-    /**
-     * Format:
-     * array(
-     *  'name' => callback
-     * )
-     *
-     * The RequestMatcher callback takes two Request objects and
-     * returns true if they match or false otherwise.
-     *
-     * @var array List of RequestMatcher names and callbacks.
-     */
-    private $availableRequestMatchers = array(
-        'method'       => array('VCR\RequestMatcher', 'matchMethod'),
-        'url'          => array('VCR\RequestMatcher', 'matchUrl'),
-        'host'         => array('VCR\RequestMatcher', 'matchHost'),
-        'headers'      => array('VCR\RequestMatcher', 'matchHeaders'),
-        'body'         => array('VCR\RequestMatcher', 'matchBody'),
-        'post_fields'  => array('VCR\RequestMatcher', 'matchPostFields'),
-        'query_string' => array('VCR\RequestMatcher', 'matchQueryString'),
-    );
-
-    /**
      * A whitelist is a list of paths.
      *
      * When processing files for code transformation, only files matching
@@ -246,61 +218,6 @@ class Configuration
     public function getStorage()
     {
         return $this->availableStorages[$this->enabledStorage];
-    }
-
-    /**
-     * Returns a list of enabled RequestMatcher callbacks.
-     *
-     * @return array List of enabled RequestMatcher callbacks.
-     */
-    public function getRequestMatchers()
-    {
-        if (is_null($this->enabledRequestMatchers)) {
-            return array_values($this->availableRequestMatchers);
-        }
-
-        return array_values(array_intersect_key(
-            $this->availableRequestMatchers,
-            array_flip($this->enabledRequestMatchers)
-        ));
-    }
-
-    /**
-     * Adds a new RequestMatcher callback.
-     *
-     * @param string $name Name of the RequestMatcher.
-     * @param callable $callback A callback taking two Request objects as parameters and returns true if those match.
-     *
-     * @return Configuration
-     * @throws VCRException If specified parameters are invalid.
-     */
-    public function addRequestMatcher($name, $callback)
-    {
-        Assertion::minLength($name, 1, "A request matchers name must be at least one character long. Found '{$name}'");
-        Assertion::isCallable($callback, "Request matcher '{$name}' is not callable.");
-        $this->availableRequestMatchers[$name] = $callback;
-
-        return $this;
-    }
-
-    /**
-     * Enables specified RequestMatchers by its name.
-     *
-     * @param array $matchers List of RequestMatcher names to enable.
-     *
-     * @return Configuration
-     *
-     * @throws \InvalidArgumentException If a specified request matcher does not exist.
-     */
-    public function enableRequestMatchers(array $matchers)
-    {
-        $invalidMatchers = array_diff($matchers, array_keys($this->availableRequestMatchers));
-        if ($invalidMatchers) {
-            throw new \InvalidArgumentException("Request matchers don't exist: " . join(', ', $invalidMatchers));
-        }
-        $this->enabledRequestMatchers = $matchers;
-        
-        return $this;
     }
 
     /**

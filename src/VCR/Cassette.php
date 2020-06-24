@@ -12,6 +12,7 @@ class Cassette
 {
     /**
      * Casette name
+     *
      * @var string
      */
     protected $name;
@@ -30,6 +31,13 @@ class Cassette
      */
     protected $storage;
 
+    /**
+     * Indicates whether the cassette has started playback.
+     *
+     * @var boolean
+     */
+    protected $startedPlayback = false;
+    
     /**
      * Creates a new cassette.
      *
@@ -50,54 +58,45 @@ class Cassette
     /**
      * Returns true if a response was recorded for specified request.
      *
-     * @param Request $request Request to check if it was recorded.
-     *
      * @return boolean True if a response was recorded for specified request.
      */
-    public function hasResponse(Request $request)
+    public function hasResponse()
     {
-        return $this->playback($request) !== null;
+        return $this->playback() !== null;
     }
 
     /**
      * Returns a response for given request or null if not found.
      *
-     * @param Request $request Request.
-     *
      * @return Response|null Response for specified request.
      */
-    public function playback(Request $request)
+    public function playback()
     {
-        foreach ($this->storage as $recording) {
-            $storedRequest = Request::fromArray($recording['request']);
-            if ($storedRequest->matches($request, $this->getRequestMatchers())) {
-                return Response::fromArray($recording['response']);
-            }
+        if ( ! $this->startedPlayback) {
+            $this->storage->rewind();
+            $this->startedPlayback = true;
         }
-
-        return null;
+        
+        if ($this->storage->valid()) {
+            $recording = $this->storage->current();
+            $response  = Response::fromArray(isset($recording['response']) ? $recording['response'] : $recording);
+        }
+        
+        $this->storage->next();
+        
+        return $response ?? null;
     }
 
     /**
      * Records a request and response pair.
      *
-     * @param Request  $request  Request to record.
      * @param Response $response Response to record.
      *
      * @return void
      */
-    public function record(Request $request, Response $response)
+    public function record(Response $response)
     {
-        if ($this->hasResponse($request)) {
-            return;
-        }
-
-        $recording = array(
-            'request'  => $request->toArray(),
-            'response' => $response->toArray()
-        );
-
-        $this->storage->storeRecording($recording);
+        $this->storage->storeRecording($response->toArray());
     }
 
     /**
@@ -118,15 +117,5 @@ class Cassette
     public function isNew()
     {
         return $this->storage->isNew();
-    }
-
-    /**
-     * Returns a list of callbacks to configured request matchers.
-     *
-     * @return array List of callbacks to configured request matchers.
-     */
-    protected function getRequestMatchers()
-    {
-        return $this->config->getRequestMatchers();
     }
 }
