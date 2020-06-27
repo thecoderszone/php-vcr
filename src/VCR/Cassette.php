@@ -3,7 +3,6 @@
 namespace VCR;
 
 use VCR\Storage\Storage;
-use VCR\Util\Assertion;
 
 /**
  * A Cassette records and plays back pairs of Requests and Responses in a Storage.
@@ -27,7 +26,7 @@ class Cassette
     /**
      * Storage used to store records and request pairs.
      *
-     * @var Storage
+     * @var Storage<array>
      */
     protected $storage;
 
@@ -43,13 +42,11 @@ class Cassette
      *
      * @param  string           $name    Name of the cassette.
      * @param  Configuration    $config  Configuration to use for this cassette.
-     * @param  Storage          $storage Storage to use for requests and responses.
+     * @param  Storage<array>   $storage Storage to use for requests and responses.
      * @throws \VCR\VCRException If cassette name is in an invalid format.
      */
-    public function __construct($name, Configuration $config, Storage $storage)
+    public function __construct(string $name, Configuration $config, Storage $storage)
     {
-        Assertion::string($name, 'Cassette name must be a string, ' . \gettype($name) . ' given.');
-
         $this->name = $name;
         $this->config = $config;
         $this->storage = $storage;
@@ -60,7 +57,7 @@ class Cassette
      *
      * @return boolean True if a response was recorded for specified request.
      */
-    public function hasResponse()
+    public function hasResponse(): bool
     {
         return $this->playback() !== null;
     }
@@ -70,7 +67,7 @@ class Cassette
      *
      * @return Response|null Response for specified request.
      */
-    public function playback()
+    public function playback(): ?Response
     {
         if ( ! $this->startedPlayback) {
             $this->storage->rewind();
@@ -94,7 +91,7 @@ class Cassette
      *
      * @return void
      */
-    public function record(Response $response)
+    public function record(Response $response): void
     {
         $this->storage->storeRecording($response->toArray());
     }
@@ -104,7 +101,7 @@ class Cassette
      *
      * @return string Current cassette name.
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
@@ -114,7 +111,7 @@ class Cassette
      *
      * @return boolean
      */
-    public function isNew()
+    public function isNew(): bool
     {
         return $this->storage->isNew();
     }
